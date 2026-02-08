@@ -113,40 +113,16 @@ def patient_login(
 
 
 
-@app.post("/ai_query", response_model=schemas.prompt_Response,status_code=201 ,tags=["AI Doctor"])
-async def ai_query_process(Query: schemas.prompt_Request, db: Session = Depends(get_db)):
-
-    payload = {
-        "model": "phi3",
-        "prompt": Query.prompt,
-        "stream": False
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=120) as client:
-            ollama_response = await client.post(
-                "http://localhost:11434/api/generate",
-                json=payload
-            )
-            ollama_response.raise_for_status()
-            data = ollama_response.json()
-
-            db_query = models.AI_Doc(
-                query=Query.prompt,
-                resolution=data["response"]
-            )
-
-            db.add(db_query)
-            db.commit()
-            db.refresh(db_query)
-
-        return {
-            "prompt": Query.prompt,
-            "response": data["response"]
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
-            
+@app.post(
+    "/ai_query",
+    response_model=schemas.prompt_Response,
+    status_code=503,
+    tags=["AI Doctor"]
+)
+async def ai_query_process():
+    raise HTTPException(
+        status_code=503,
+        detail="AI service is disabled in production environment"
+    )
